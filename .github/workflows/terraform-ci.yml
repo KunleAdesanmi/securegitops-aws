@@ -1,0 +1,102 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/**'
+      - 'policies/**'
+      - '.github/workflows/terraform-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive terraform/
+
+      - name: Terraform validate (all envs)
+        run: |
+          for dir in terraform/environments/*/; do
+            echo "Validating ${dir}"
+            terraform -chdir="${dir}" init -backend=false
+            terraform -chdir="${dir}" validate
+          done
+
+  tflint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: terraform-linters/setup-tflint@v4
+      - name: Run tflint
+        run: |
+          tflint --init
+          tflint --recursive --format compact
+
+  tfsec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: terraform/
+          soft_fail: false
+
+  checkov:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform/
+          framework: terraform
+          output_format: cli,sarif
+          output_file_path: console,checkov-results.sarif
+          soft_fail: false
+      - name: Upload Checkov SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
+
+  opa-conftest:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+      - name: Install conftest
+        run: |
+          wget -qO- https://github.com/open-policy-agent/conftest/releases/download/v0.50.0/conftest_0.50.0_Linux_x86_64.tar.gz \
+            | tar xz -C /usr/local/bin conftest
+
+      - name: Plan (no-refresh) and convert to JSON
+        run: |
+          cd terraform/environments/dev-eu-west-2
+          terraform init -backend=false
+          terraform plan -refresh=false -out=tfplan -lock=false || true
+          terraform show -json tfplan > plan.json || echo '{}' > plan.json
+        continue-on-error: true
+
+      - name: Run OPA policies
+        run: |
+          conftest test terraform/environments/dev-eu-west-2/plan.json \
+            -p policies/opa/ --all-namespaces

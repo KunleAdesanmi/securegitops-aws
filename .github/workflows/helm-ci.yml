@@ -1,0 +1,48 @@
+name: Helm CI
+
+on:
+  pull_request:
+    paths:
+      - 'charts/**'
+      - 'argocd/**'
+      - '.github/workflows/helm-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.15.2
+
+      - name: helm lint
+        run: |
+          for chart in charts/*/; do
+            helm lint "${chart}"
+          done
+
+      - name: helm template (render manifests)
+        run: |
+          mkdir -p rendered
+          for chart in charts/*/; do
+            name=$(basename "${chart}")
+            helm template "${name}" "${chart}" > "rendered/${name}.yaml"
+          done
+
+      - name: Install kubeconform
+        run: |
+          wget -qO- https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
+            | tar xz -C /usr/local/bin kubeconform
+
+      - name: Validate against Kubernetes schema
+        run: kubeconform -strict -summary rendered/
+
+      - name: kube-linter
+        uses: stackrox/kube-linter-action@v1.0.5
+        with:
+          directory: rendered/
+          config: .kube-linter.yaml

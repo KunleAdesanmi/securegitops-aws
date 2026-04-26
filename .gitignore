@@ -1,0 +1,12 @@
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.tfplan
+plan.json
+__pycache__/
+*.pyc
+.pytest_cache/
+checkov-results.sarif
+rendered/
+.DS_Store

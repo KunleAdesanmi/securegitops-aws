@@ -5,7 +5,7 @@ terraform {
     tls = { source = "hashicorp/tls", version = "~> 4.0" }
   }
   backend "s3" {
-    bucket         = "REPLACE_WITH_YOUR_BUCKET"
+    bucket         = "securegitops-tfstate-563046585342"
     key            = "dev-eu-west-2/terraform.tfstate"
     region         = "eu-west-2"
     dynamodb_table = "securegitops-tflock"

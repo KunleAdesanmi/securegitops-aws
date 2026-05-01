@@ -8,7 +8,7 @@ A production-style, security-first GitOps platform demonstrating end-to-end DevS
 
 ## Why this project exists
 
-Most portfolio projects show *that* a candidate can deploy infrastructure. This one shows *how* — with the security gates, modular boundaries, and operational tooling that distinguish a working prototype from something you'd actually run in production.
+This project shows *how* — with the security gates, modular boundaries, and operational tooling that distinguish a working prototype from something you'd actually run in production.
 
 Every design decision in this repo is deliberate, commented, and traceable to a real-world threat or operational concern. The accompanying [runbook](docs/runbook.md) walks through how I'd respond to common incidents in this stack.
 
@@ -65,7 +65,7 @@ All five control plane log types are enabled — required for CIS benchmark comp
 
 ![GitHub Actions workflow run history](docs/screenshots/04-gh-actions-history.png)
 
-Every PR triggers five parallel jobs. Branch protection requires all to pass before merge.
+Every PR triggers five parallel jobs. Branch protection requires all to pass before merge. (Work In Progress)
 
 ### 5. VPC flow logs streaming to CloudWatch
 
@@ -73,11 +73,6 @@ Every PR triggers five parallel jobs. Branch protection requires all to pass bef
 
 Flow logs answer "did pod X actually talk to the database?" during incident response.
 
-### 6. IRSA — no static credentials in the cluster
-
-![Service account annotation showing IAM role ARN](docs/screenshots/06-irsa-annotation.png)
-
-Pods receive AWS credentials via OIDC token exchange against an IAM role scoped to a specific `namespace:serviceaccount` pair.
 
 ---
 

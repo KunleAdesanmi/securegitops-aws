@@ -133,8 +133,8 @@ resource "aws_iam_role_policy_attachment" "node_ecr" {
 # Launch template: enforces IMDSv2 (mitigates SSRF → credential theft —
 # this is the SSRF-to-IAM attack pattern from the Capital One breach).
 resource "aws_launch_template" "node" {
-  name_prefix   = "${var.name}-node-"
-  instance_type = var.node_instance_types[0]
+  name_prefix = "${var.name}-node-"
+  # instance_type is set on the node group, not here — EKS disallows both.
 
   metadata_options {
     http_endpoint               = "enabled"
@@ -186,3 +186,13 @@ resource "aws_eks_node_group" "this" {
     aws_iam_role_policy_attachment.node_ecr,
   ]
 }
+
+resource "aws_security_group_rule" "bad_demo" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.cluster.id
+}
+

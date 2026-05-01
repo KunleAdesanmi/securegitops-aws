@@ -45,31 +45,31 @@ Every design decision in this repo is deliberate, commented, and traceable to a 
 
 ### 1. Policy-as-code blocks insecure changes before merge
 
-![CI blocking a PR with a security violation](docs/screenshots/01-ci-blocking-pr.png)
+![CI blocking a PR with a security violation](docs/screenshots/01-ci-blocking-pr.PNG)
 
 A deliberately introduced `0.0.0.0/0` ingress rule on port 22 is caught by the custom OPA policy in `policies/opa/security.rego` before the PR can be merged.
 
 ### 2. GitOps loop running with auto-sync and self-heal
 
-![ArgoCD applications view showing synced and healthy](docs/screenshots/02-argocd-synced.png)
+![ArgoCD applications view showing synced and healthy](docs/screenshots/02-argocd-synced.PNG)
 
 The `root` Application manages all child applications via the app-of-apps pattern.
 
 ### 3. Live EKS cluster with full control plane logging
 
-![EKS console showing cluster overview and logging configuration](docs/screenshots/03-eks-console.png)
+![EKS console showing cluster overview and logging configuration](docs/screenshots/03-eks-console.PNG)
 
 All five control plane log types are enabled — required for CIS benchmark compliance.
 
 ### 4. CI history showing active enforcement
 
-![GitHub Actions workflow run history](docs/screenshots/04-gh-actions-history.png)
+![GitHub Actions workflow run history](docs/screenshots/04-gh-actions-history.PNG)
 
 Every PR triggers five parallel jobs. Branch protection requires all to pass before merge. (Work In Progress)
 
 ### 5. VPC flow logs streaming to CloudWatch
 
-![VPC flow logs in CloudWatch](docs/screenshots/05-vpc-flowlogs.png)
+![VPC flow logs in CloudWatch](docs/screenshots/05-vpc-flowlogs.PNG)
 
 Flow logs answer "did pod X actually talk to the database?" during incident response.
 
